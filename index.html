@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusShare UD</title>
+  <meta name="description" content="Borrow and lend items across University of Delaware residence complexes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#browse" data-view="browse">CampusShare <span>UD</span></a>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav id="site-nav" class="site-nav">
+        <button type="button" class="nav-link is-active" data-view="browse">Browse</button>
+        <button type="button" class="nav-link" data-view="list">List Your Stuff</button>
+        <button type="button" class="nav-link" data-view="locker">My Locker</button>
+      </nav>
+    </div>
+  </header>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <main>
+    <section id="view-browse" class="view is-active">
+      <div class="hero">
+        <p class="eyebrow">University of Delaware</p>
+        <h1>Borrow what you need. Lend what you are not using.</h1>
+        <p class="lede">CampusShare keeps bulky, once-a-month gear circulating across Laird, East, Central/South, and Apartments — so you do not spend closet space or a tight budget on a steamer you need once.</p>
+      </div>
+
+      <div class="panel filters">
+        <label>
+          Category
+          <select id="filter-category">
+            <option value="all">All categories</option>
+            <option value="Appliances">Appliances</option>
+            <option value="Tools">Tools</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Kitchen">Kitchen</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label>
+          Location
+          <select id="filter-location">
+            <option value="all">All complexes</option>
+            <option value="Laird Campus Suites">Laird Campus Suites</option>
+            <option value="East Campus Traditional">East Campus Traditional</option>
+            <option value="Central/South Campus">Central/South Campus</option>
+            <option value="Apartments">Apartments</option>
+          </select>
+        </label>
+        <p id="result-count" class="result-count"></p>
+      </div>
+
+      <div id="item-grid" class="item-grid"></div>
+    </section>
+
+    <section id="view-list" class="view">
+      <div class="page-intro">
+        <p class="eyebrow">Share your extra gear</p>
+        <h1>List Your Stuff</h1>
+        <p class="lede">Post an item your hallmates can borrow. It is saved in this browser and shows up on Browse immediately.</p>
+      </div>
+
+      <form id="list-form" class="card form-card">
+        <label>
+          Item name
+          <input id="item-name" name="title" type="text" required maxlength="80" placeholder="Garment steamer, cordless drill…">
+        </label>
+        <label>
+          Category
+          <select id="item-category" name="category" required>
+            <option value="">Select a category</option>
+            <option value="Appliances">Appliances</option>
+            <option value="Tools">Tools</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Kitchen">Kitchen</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label>
+          UD residence complex
+          <select id="item-complex" name="complex" required>
+            <option value="">Select a complex</option>
+            <option value="Laird Campus Suites">Laird Campus Suites</option>
+            <option value="East Campus Traditional">East Campus Traditional</option>
+            <option value="Central/South Campus">Central/South Campus</option>
+            <option value="Apartments">Apartments</option>
+          </select>
+        </label>
+        <label>
+          Building
+          <select id="item-building" name="building" required>
+            <option value="">Select a complex first</option>
+          </select>
+        </label>
+        <label class="full">
+          Description
+          <textarea id="item-description" name="description" rows="3" required maxlength="280" placeholder="What it is and any rules (no food in the steamer, return with a full battery…)"></textarea>
+        </label>
+        <label class="full">
+          Pick-up instructions
+          <textarea id="item-pickup" name="pickup" rows="2" maxlength="200" placeholder="Meet in the George Read lobby after 6pm"></textarea>
+        </label>
+        <button class="btn btn-gold" type="submit">Add to CampusShare</button>
+      </form>
+    </section>
+
+    <section id="view-locker" class="view">
+      <div class="page-intro">
+        <p class="eyebrow">Your space</p>
+        <h1>My Locker</h1>
+        <p class="lede">Track what you are borrowing and what you are lending. Approve campus requests, or mark gear returned when it is back in your room.</p>
+      </div>
+      <div class="locker-grid">
+        <article class="card">
+          <h2>Items I am Borrowing</h2>
+          <div id="locker-borrowing"></div>
+        </article>
+        <article class="card">
+          <h2>Items I am Lending</h2>
+          <div id="locker-lending"></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="request-modal" class="modal">
+    <form id="request-form" method="dialog" class="modal-card">
+      <h2>Request to Borrow</h2>
+      <p id="request-item-label" class="modal-sub"></p>
+      <label>
+        Start date
+        <input id="request-start" type="date" required>
+      </label>
+      <label>
+        End date
+        <input id="request-end" type="date" required>
+      </label>
+      <input type="hidden" id="request-item-id">
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" id="request-cancel">Cancel</button>
+        <button class="btn btn-gold" type="submit">Send request</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="site-footer">
+    <p>CampusShare UD — borrow across Laird, East, Central/South, and Apartments.</p>
+  </footer>
+
+  <script src="scripts.js"></script>
+</body>
+</html>
