@@ -1,5 +1,8 @@
+"use client";
+
 import { RequestGate } from "@/components/request-gate";
 import { categoryIcon, publicDisplayName, statusLabel } from "@/lib/campus";
+import { formatStars } from "@/lib/ratings";
 
 export type MarketplaceItem = {
   id: string;
@@ -13,6 +16,10 @@ export type MarketplaceItem = {
     first_name: string;
     last_name: string;
   } | null;
+  lenderRating?: {
+    avg_overall: number | null;
+    review_count: number;
+  };
 };
 
 export function ItemCard({
@@ -45,6 +52,14 @@ export function ItemCard({
           {statusLabel(item.status)}
         </span>
       </div>
+      {item.lenderRating ? (
+        <p className="mt-1 text-xs text-muted">
+          Lending rating: {formatStars(item.lenderRating.avg_overall)}
+          {item.lenderRating.review_count
+            ? ` · ${item.lenderRating.review_count} recent`
+            : ""}
+        </p>
+      ) : null}
       <RequestGate signedIn={signedIn} href={`/items/${item.id}`} />
     </article>
   );

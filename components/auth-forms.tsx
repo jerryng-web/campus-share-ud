@@ -61,11 +61,17 @@ export function SignupForm() {
         <input name="email" type="email" required className={fieldClass} />
       </label>
       <label className="block text-sm font-medium text-ud-blue">
+        Phone number
+        <input name="phone" type="tel" required inputMode="tel" autoComplete="tel" className={fieldClass} />
+      </label>
+      <label className="block text-sm font-medium text-ud-blue">
         Password
         <input name="password" type="password" minLength={8} required className={fieldClass} />
       </label>
       <p className="text-xs leading-5 text-muted">
         We show only your first name and last initial on public listings. We never collect age.
+        Your phone is private and is used to block duplicate accounts if a loan is reported lost,
+        damaged, or stolen.
       </p>
       {state.error ? (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>

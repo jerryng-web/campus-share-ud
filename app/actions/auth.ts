@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { isValidUsPhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthState = {
@@ -18,21 +19,34 @@ export async function signUpAction(_prev: AuthState, formData: FormData): Promis
   const lastName = clean(formData.get("last_name"));
   const email = clean(formData.get("email"));
   const password = clean(formData.get("password"));
+  const phone = clean(formData.get("phone"));
 
-  if (!firstName || !lastName || !email || !password) {
-    return { error: "Please fill in your name, email, and password." };
+  if (!firstName || !lastName || !email || !password || !phone) {
+    return { error: "Please fill in your name, email, phone, and password." };
   }
   if (password.length < 8) {
     return { error: "Use a password with at least 8 characters." };
   }
+  if (!isValidUsPhone(phone)) {
+    return { error: "Enter a 10-digit U.S. phone number." };
+  }
 
   const supabase = await createClient();
+  const { data: flaggedPhone } = await supabase.rpc("is_phone_blocked", { raw: phone });
+  const { data: inUse } = await supabase.rpc("is_phone_in_use", { raw: phone });
+  if (flaggedPhone || inUse) {
+    return {
+      error: flaggedPhone
+        ? "This phone number cannot be used to create an account."
+        : "That phone number is already used on another CampusShare account.",
+    };
+  }
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
   const proto = headerList.get("x-forwarded-proto") ?? "http";
   const origin = host ? `${proto}://${host}` : "http://localhost:3000";
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -40,6 +54,7 @@ export async function signUpAction(_prev: AuthState, formData: FormData): Promis
       data: {
         first_name: firstName,
         last_name: lastName,
+        phone,
       },
     },
   });
@@ -48,7 +63,17 @@ export async function signUpAction(_prev: AuthState, formData: FormData): Promis
     return { error: error.message };
   }
 
-  redirect("/signup/check-email");
+  if (!data.session) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (signInError) {
+      redirect("/signup/check-email");
+    }
+  }
+
+  redirect("/locker");
 }
 
 export async function signInAction(_prev: AuthState, formData: FormData): Promise<AuthState> {

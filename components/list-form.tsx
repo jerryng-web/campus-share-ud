@@ -93,6 +93,18 @@ export function ListForm() {
         />
       </label>
       <label className="block text-sm font-medium text-ud-blue">
+        What you paid for this item
+        <input
+          name="purchase_price"
+          type="number"
+          min="0"
+          step="0.01"
+          required
+          placeholder="Used as the billed amount if it is lost, damaged, or stolen"
+          className="mt-1 w-full rounded-xl border border-[var(--line)] bg-cream px-3 py-2.5"
+        />
+      </label>
+      <label className="block text-sm font-medium text-ud-blue">
         Pick-up instructions
         <textarea
           name="pickup_instructions"

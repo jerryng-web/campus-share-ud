@@ -12,7 +12,7 @@ export default async function SignupPage() {
       <div>
         <h1 className="font-display text-3xl font-semibold text-ud-blue">Create your account</h1>
         <p className="mt-2 text-sm text-muted">
-          Sign up with email and password. We will send a confirmation link before you can log in.
+          Sign up with email, phone, and password. New accounts cannot reuse a blocked phone number.
         </p>
       </div>
       <SignupForm />

@@ -25,9 +25,14 @@ export async function createItemAction(
   const building = clean(formData.get("building"));
   const description = clean(formData.get("description"));
   const pickup = clean(formData.get("pickup_instructions"));
+  const priceRaw = clean(formData.get("purchase_price"));
+  const purchasePrice = Number(priceRaw);
 
-  if (!title || !category || !complex || !building || !description) {
+  if (!title || !category || !complex || !building || !description || !priceRaw) {
     return { error: "Please complete every field before listing your item." };
+  }
+  if (!Number.isFinite(purchasePrice) || purchasePrice < 0) {
+    return { error: "Enter what you paid for this item, using 0 if it was free." };
   }
   if (!CATEGORIES.includes(category as (typeof CATEGORIES)[number])) {
     return { error: "Choose a valid category." };
@@ -49,6 +54,7 @@ export async function createItemAction(
     building,
     description,
     pickup_instructions: pickup || null,
+    purchase_price: purchasePrice,
     status: "available",
   });
 

@@ -1,7 +1,9 @@
 import { BrowseFilters } from "@/components/browse-filters";
 import { ItemCard, type MarketplaceItem } from "@/components/item-card";
+import { expireStaleRequests } from "@/app/actions/transactions";
 import { getCurrentUserId } from "@/lib/auth";
 import { MOCK_LISTINGS } from "@/lib/mock-listings";
+import { emptyRating } from "@/lib/ratings";
 import { createClient } from "@/lib/supabase/server";
 
 function matchesFilters(item: MarketplaceItem, category: string, complex: string) {
@@ -21,11 +23,13 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
 
   if (userId) {
     const supabase = await createClient();
+    await expireStaleRequests();
     let query = supabase
       .from("items")
       .select(
-        "id, title, description, category, complex, building, status, owner:profiles!owner_id(first_name, last_name)",
+        "id, title, description, category, complex, building, status, owner_id, owner:profiles!owner_id(first_name, last_name)",
       )
+      .eq("status", "available")
       .order("created_at", { ascending: false });
 
     if (category !== "all") query = query.eq("category", category);
@@ -33,16 +37,29 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
 
     const { data, error } = await query;
     errorMessage = error?.message ?? null;
-    items = (data ?? []).map((row) => ({
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      category: row.category,
-      complex: row.complex,
-      building: row.building,
-      status: row.status,
-      owner: Array.isArray(row.owner) ? row.owner[0] : row.owner,
-    }));
+    items = await Promise.all(
+      (data ?? []).map(async (row) => {
+        const owner = Array.isArray(row.owner) ? row.owner[0] : row.owner;
+        const { data: rating } = await supabase.rpc("rating_summary", {
+          p_user: row.owner_id,
+          p_role: "lender",
+        });
+        const summary = Array.isArray(rating) ? rating[0] : rating;
+        return {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          category: row.category,
+          complex: row.complex,
+          building: row.building,
+          status: row.status,
+          owner,
+          lenderRating: summary
+            ? { avg_overall: summary.avg_overall, review_count: summary.review_count }
+            : { avg_overall: emptyRating().avg_overall, review_count: 0 },
+        };
+      }),
+    );
   } else {
     items = MOCK_LISTINGS.filter((item) => matchesFilters(item, category, complex));
   }

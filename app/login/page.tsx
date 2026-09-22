@@ -20,7 +20,7 @@ export default async function LoginPage({
       <div>
         <h1 className="font-display text-3xl font-semibold text-ud-blue">Log in</h1>
         <p className="mt-2 text-sm text-muted">
-          Use the email and password you signed up with after confirming the link in your inbox.
+          Use the email and password you signed up with.
         </p>
       </div>
       <LoginForm next={next} error={error} />

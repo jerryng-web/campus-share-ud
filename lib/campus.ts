@@ -47,7 +47,15 @@ export const CATEGORY_ICONS: Record<(typeof CATEGORIES)[number], string> = {
 };
 
 export type ItemStatus = "available" | "requested" | "on_loan";
-export type TransactionStatus = "pending" | "approved" | "denied" | "returned";
+export type TransactionStatus =
+  | "pending"
+  | "on_loan"
+  | "awaiting_inspection"
+  | "returned"
+  | "denied"
+  | "expired"
+  | "incident";
+export type FlagLevel = "caution" | "beware" | "do_not_recommend";
 
 export function publicDisplayName(firstName?: string | null, lastName?: string | null) {
   const first = (firstName ?? "").trim() || "Student";
@@ -59,10 +67,21 @@ export function statusLabel(status: string) {
   if (status === "on_loan") return "On Loan";
   if (status === "requested") return "Requested";
   if (status === "pending") return "Pending";
-  if (status === "approved") return "Approved";
+  if (status === "awaiting_inspection") return "Awaiting inspection";
+  if (status === "approved") return "On Loan";
   if (status === "denied") return "Denied";
   if (status === "returned") return "Returned";
+  if (status === "expired") return "Expired";
+  if (status === "incident") return "Lost / damaged / stolen";
+  if (status === "overdue") return "Overdue";
   return "Available";
+}
+
+export function flagLabel(level?: string | null) {
+  if (level === "caution") return "Caution";
+  if (level === "beware") return "Beware";
+  if (level === "do_not_recommend") return "Do not recommend";
+  return null;
 }
 
 export function categoryIcon(category: string) {
@@ -79,7 +98,33 @@ export function formatStamp(value?: string | null) {
 
 export function formatDate(value?: string | null) {
   if (!value) return "—";
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(
-    new Date(`${value}T00:00:00`),
-  );
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(
+      new Date(`${value}T00:00:00`),
+    );
+  }
+  return formatStamp(value);
+}
+
+export function hoursSince(value?: string | null) {
+  if (!value) return 0;
+  return (Date.now() - new Date(value).getTime()) / 36e5;
+}
+
+export function isOverdue(status: string, dueAt?: string | null) {
+  return status === "on_loan" && Boolean(dueAt) && new Date(dueAt as string).getTime() < Date.now();
+}
+
+export function toDatetimeLocalValue(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function fromDatetimeLocal(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
 }
